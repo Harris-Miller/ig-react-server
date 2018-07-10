@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "db:migrate": "knex migrate:latest",
+    "db:rollback": "knex migrate:rollback",
+    "db:seed": "knex seed:run",
     "bump": "CI=true bump --prompt --commit --tag --all",
     "lint": "eslint .",
     "start": "node ./bin/www",
