@@ -2,10 +2,10 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const createError = require('http-errors');
 const User = require('../models/user');
-const graphql = require('graphql');
+const { buildSchema } = require('graphql');
 const graphqlHTTP = require('express-graphql');
 
-const userSchema = graphql.buildSchema(`
+const userSchema = buildSchema(`
   type Query {
     user(id: Int!): User
     users: [User]
@@ -18,6 +18,8 @@ const userSchema = graphql.buildSchema(`
     displayname: String
     email: String
     profilePicUrl: String
+    searchname: String
+    searchnameReverse: String
     createdAt: String
     updatedAt: String,
     posts: [Post]
@@ -52,8 +54,6 @@ function getUsers() {
 }
 
 function updateUser({ id, displayname, email, profilePicUrl }) {
-  console.log('in updateUser', id, displayname, email, profilePicUrl);
-
   const saveObj = {};
   id && (saveObj['id'] = id);
   displayname && (saveObj['displayname'] = displayname);
@@ -83,5 +83,5 @@ const root = {
 module.exports = graphqlHTTP({
   schema: userSchema,
   rootValue: root,
-  graphiql: true
+  graphiql: process.env.NODE_ENV === 'development'
 });
