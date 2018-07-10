@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "db:migrate": "knex migrate:latest",
+    "bump": "CI=true bump --prompt --commit --tag --all",
     "lint": "eslint .",
     "start": "node ./bin/www",
     "start:dev": "nodemon --watch app.js --watch middleware --watch models --watch routes --exec node -- ./bin/www",
