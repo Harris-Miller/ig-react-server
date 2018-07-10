@@ -1,4 +1,4 @@
-exports.seed = async (knex) => {
+exports.seed = async knex => {
   // Deletes ALL existing entries
   await knex('users').del()
     .then(function () {

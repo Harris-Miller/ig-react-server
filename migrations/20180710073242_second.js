@@ -1,4 +1,4 @@
-exports.up = async (knex) => {
+exports.up = async knex => {
   await knex.schema.table('users', table => {
     table.string('searchname').notNullable().unique();
     table.string('searchname_reverse').notNullable().unique();
@@ -22,7 +22,7 @@ exports.up = async (knex) => {
   });
 };
 
-exports.down = async (knex) => {
+exports.down = async knex => {
   await knex.schema.dropTable('comments');
 
   await knex.schema.dropTable('posts');
