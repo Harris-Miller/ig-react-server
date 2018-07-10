@@ -1,0 +1,42 @@
+{
+  "name": "ig-react-server",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "db:migrate": "knex migrate:latest",
+    "lint": "eslint .",
+    "start": "node ./bin/www",
+    "start:dev": "nodemon --watch app.js --watch middleware --watch models --watch routes --exec node -- ./bin/www",
+    "test": "NODE_ENV=test nyc --reporter=text --reporter=html mocha --check-leakers --recursive --exit",
+    "test:watch": "NODE_ENV=test mocha --check-leaks --recursive --watch"
+  },
+  "dependencies": {
+    "bcrypt": "^3.0.0",
+    "bookshelf": "^0.13.3",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.9",
+    "dotenv": "^6.0.0",
+    "express": "~4.16.0",
+    "http-errors": "^1.6.3",
+    "jsonwebtoken": "^8.3.0",
+    "knex": "^0.15.0",
+    "morgan": "~1.9.0",
+    "nodemon": "^1.17.5",
+    "pg": "^7.4.3"
+  },
+  "devDependencies": {
+    "babel-eslint": "^8.2.5",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "dirty-chai": "^2.0.1",
+    "eslint": "^5.1.0",
+    "eslint-config-harris": "^1.4.0",
+    "eslint-plugin-babel": "^5.1.0",
+    "eslint-plugin-filenames": "^1.3.2",
+    "mocha": "^5.2.0",
+    "sinon": "^6.1.3",
+    "sinon-chai": "^3.2.0",
+    "supertest": "^3.1.0",
+    "version-bump-prompt": "^4.1.0"
+  }
+}
