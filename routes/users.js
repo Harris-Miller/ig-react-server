@@ -8,7 +8,8 @@ const User = require('../models/user');
 // temp test route
 router.route('/').get((req, res) =>
   User
-    .fetchAll({ columns: ['id', 'displayname', 'email', 'created_at', 'updated_at'] })
+    // .fetchAll({ columns: ['id', 'displayname', 'email', 'created_at', 'updated_at'] })
+    .fetchAll()
     .then(results => {
       res.json(results);
     })

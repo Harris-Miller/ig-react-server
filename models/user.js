@@ -1,13 +1,15 @@
 const bookshelf = require('../bookshelf');
-const Post = require('./posts');
-const Comment = require('./comment');
+require('./post');
+require('./comment');
 
-module.exports = bookshelf.Model.extend({
+const User = bookshelf.Model.extend({
   tableName: 'users',
   posts() {
-    return this.hasMany(Post);
+    return this.hasMany('Post');
   },
   comments() {
-    return this.hasMany(Comment);
+    return this.hasMany('Comment');
   }
 });
+
+module.exports = bookshelf.model('User', User);
