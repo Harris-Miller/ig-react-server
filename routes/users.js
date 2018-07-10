@@ -1,73 +1,87 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const createError = require('http-errors');
-const router = new express.Router();
 const User = require('../models/user');
-// const authenticate = require('../middleware/authenticate');
+const graphql = require('graphql');
+const graphqlHTTP = require('express-graphql');
 
-// temp test route
-router.route('/').get((req, res) =>
-  User
-    // .fetchAll({ columns: ['id', 'displayname', 'email', 'created_at', 'updated_at'] })
-    .fetchAll()
-    .then(results => {
-      res.json(results);
-    })
-);
-
-router.route('/').post((req, res, next) => {
-  const { email, password, displayname } = req.body;
-
-  if (!email || !password || !displayname) {
-    return next(new createError.BadRequest('Invalid Credentials'));
+const userSchema = graphql.buildSchema(`
+  type Query {
+    user(id: Int!): User
+    users: [User]
+  },
+  type Mutation {
+    updateUser(id: Int!, displayname: String, email: String, profilePicUrl: String): User
+  },
+  type User {
+    id: Int
+    displayname: String
+    email: String
+    profilePicUrl: String
+    createdAt: String
+    updatedAt: String,
+    posts: [Post]
+  },
+  type Post {
+    id: Int
+    userId: Int
+    text: String
+    fullUrl: String
   }
+`);
 
-  const passwordDigest = bcrypt.hashSync(password, 10);
+function getUser({ id }) {
+  return User
+    .query({ where: { id }})
+    .fetch({ withRelated: 'posts' })
+    .then(user => {
+      if (!user) {
+        return new createError.NotFound();
+      }
+
+      return user.toJSON();
+    });
+}
+
+function getUsers() {
+  return User
+    .fetchAll({ withRelated: 'posts' })
+    .then(users => {
+      return users.toJSON();
+    });
+}
+
+function updateUser({ id, displayname, email, profilePicUrl }) {
+  console.log('in updateUser', id, displayname, email, profilePicUrl);
+
+  const saveObj = {};
+  id && (saveObj['id'] = id);
+  displayname && (saveObj['displayname'] = displayname);
+  email && (saveObj['email'] = email);
+  profilePicUrl && (saveObj['profile_pic_url'] = profilePicUrl);
 
   return User
-    .forge({
-      displayname,
-      email,
-      passwordDigest
-    }, {
-      hasTimestamps: true
-    })
-    .save()
-    .then(newUser => {
-      const { passwordDigest: _, ...rest } = newUser.attributes;
-      res.status(201);
-      res.json(rest);
-    }).catch(err => next(new createError.InternalServerError(err)));
-});
-
-router.route('/:id').get((req, res, next) => {
-  const { id } = req.params;
-
-  User
-    .query({ where: { id: parseInt(id, 10) }})
-    .fetch({ columns: ['id', 'displayname', 'profile_pic_url']})
+    .query({ where: { id }})
+    .fetch()
     .then(user => {
       if (!user) {
-        return res.next(new createError.NotFound());
+        return new createError.NotFound();
       }
 
-      return res.json(user);
-    })
+      return user.save(saveObj, { patch: true });
+    }).then(user =>
+      user.toJSON()
+    );
+}
+
+const root = {
+  user: getUser,
+  users: getUsers,
+  updateUser
+};
+
+module.exports = graphqlHTTP({
+  schema: userSchema,
+  rootValue: root,
+  graphiql: true
 });
-
-router.route('/:id/posts').get((req, res, next) => {
-  const { id } = req.params;
-
-  User
-    .query({ where: { id: parseInt(id, 10) }})
-    .fetch({ withRelated: [{ posts: query => { query.select('id', 'text', 'full_url', 'created_at', 'updated_at', 'user_id'); } }] })
-    .then(user => {
-      if (!user) {
-        return next(new createError.NotFound());
-      }
-
-      return res.json(user.related('posts'));
-    });
-});
-
-module.exports = router;
