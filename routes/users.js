@@ -6,13 +6,13 @@ const User = require('../models/user');
 // const authenticate = require('../middleware/authenticate');
 
 // temp test route
-router.route('/').get((req, res) => {
-  return User
+router.route('/').get((req, res) =>
+  User
     .fetchAll()
     .then(results => {
-      res.json(results)
-    });
-});
+      res.json(results);
+    })
+);
 
 router.route('/').post((req, res, next) => {
   const { email, password, displayname } = req.body;

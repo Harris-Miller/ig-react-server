@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const router = new express.Router();
 const User = require('../models/user');
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const { JWT_SECRET } = process.env;
 
 router.route('/').post((req, res, next) => {
   const { email, password } = req.body;
