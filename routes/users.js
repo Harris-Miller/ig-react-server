@@ -7,14 +7,14 @@ const graphqlHTTP = require('express-graphql');
 
 const userSchema = buildSchema(`
   type Query {
-    user(id: Int!): User
+    user(id: ID!): User
     users: [User]
   },
   type Mutation {
-    updateUser(id: Int!, displayname: String, email: String, profilePicUrl: String): User
+    updateUser(id: ID!, displayname: String, email: String, profilePicUrl: String): User
   },
   type User {
-    id: Int
+    id: ID
     displayname: String
     email: String
     profilePicUrl: String
@@ -25,8 +25,8 @@ const userSchema = buildSchema(`
     posts: [Post]
   },
   type Post {
-    id: Int
-    userId: Int
+    id: ID
+    userId: ID
     text: String
     fullUrl: String
   }
