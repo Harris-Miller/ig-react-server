@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const createError = require('http-errors');
 const router = new express.Router();
 const User = require('../models/user');
+const Post = require('../models/post');
 // const authenticate = require('../middleware/authenticate');
 
 // temp test route
@@ -48,7 +49,7 @@ router.route('/:id').get((req, res, next) => {
     .fetch({ columns: ['id', 'displayname', 'profile_pic_url']})
     .then(user => {
       if (!user) {
-        return res.next(new createError.NotFound());
+        return next(new createError.NotFound());
       }
 
       return res.json(user);
@@ -58,9 +59,13 @@ router.route('/:id').get((req, res, next) => {
 router.route('/:id/posts').get((req, res, next) => {
   const { id } = req.params;
 
+  // only fetch the column id for the user, because we're only returning the related data anyways
+  // (eg. get min ammount of data needed)
+  // Q: why not just do a query on Post?
+  // A: because we want to atleast see if the user exists to send back a 404, so we go through the User object
   User
-    .query({ where: { id: parseInt(id, 10) }})
-    .fetch({ withRelated: [{ posts: query => { query.select('id', 'text', 'full_url', 'created_at', 'updated_at', 'user_id'); } }] })
+    .forge({ id: parseInt(id, 10) })
+    .fetch({ columns: ['id'], withRelated: [{ posts: query => { query.select('id', 'text', 'full_url', 'created_at', 'updated_at', 'user_id'); } }] })
     .then(user => {
       if (!user) {
         return next(new createError.NotFound());

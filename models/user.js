@@ -9,6 +9,9 @@ const User = bookshelf.Model.extend({
   },
   comments() {
     return this.hasMany('Comment');
+  },
+  blocked() {
+    return this.hasMany('blocked')
   }
 });
 
