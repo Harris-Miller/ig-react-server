@@ -1,7 +1,4 @@
 const createError = require('http-errors');
-const jwt = require('jsonwebtoken');
-
-const { JWT_SECRET } = process.env;
 
 const authorizeByIdParam = (req, res, next) => {
   const { userId } = req;

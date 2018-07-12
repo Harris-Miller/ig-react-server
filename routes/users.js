@@ -1,19 +1,24 @@
 const { promisify } = require('util');
-const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const createError = require('http-errors');
 const latinize = require('latinize');
 const S3 = require('aws-sdk/clients/s3');
-const multer  = require('multer');
-const Jimp = require("jimp");
+const multer = require('multer');
+const Jimp = require('jimp');
+const uuid = require('uuid/v4');
 const User = require('../models/user');
 const Post = require('../models/post');
 // const authenticate = require('../middleware/authenticate');
 
 const router = new express.Router();
-const s3 = new S3({apiVersion: '2006-03-01'});
+const s3 = new S3({ apiVersion: '2006-03-01' });
 const upload = multer({ storage: multer.memoryStorage() });
+
+s3.putObjectAsync = promisify(s3.putObject);
+
+const BUCKET_URL = 'https://s3.us-east-2.amazonaws.com/ig-clone-dev';
 
 // temp test route
 router.route('/').get((req, res) =>
@@ -113,37 +118,56 @@ router.route('/:id/posts').post((req, res, next) => {
 });
 
 router.route('/:id/picture').post(upload.single('image'), (req, res, next) => {
-  const { id } = req.params;
+  const { file } = req;
 
-  const originalFile = req.file;
+  const ext = path.extname(file.originalname);
+  const id = uuid();
 
-  console.log(originalFile);
+  const rtnObj = {
+    filename: file.originalname
+  };
 
   // first we read the image
-  Jimp.read(originalFile.buffer)
+  Jimp.read(file.buffer)
     .then(image => {
+      image.getBufferAsync = promisify(image.getBuffer);
       // lets take a look at the dimentions
       // if the width is greater then 500
       // then we scale the image down to a width of 500
       if (image.bitmap.width > 500) {
         image.resize(500, Jimp.AUTO);
-        // then save 2 versions
-        fs.writeFileSync(originalFile.originalname, originalFile.buffer);
-        image.getBuffer(originalFile.mimetype, (err, buffer) => {
-          if (err) {
-            return next(err);
-          }
 
-          // fs.writeFileSync(`thumb_${originalFile.originalname}`, buffer);
-          res.json({ foo: 'bar '});
-        });
-      } else {
-        // fs.writeFileSync(originalFile.originalname, originalFile.buffer);
-        res.json({ foo: 'bar '});
+        const thumbName = `${id}_thumb${ext}`;
+
+        // and save it to s3
+
+        rtnObj.thumbUrl = `${BUCKET_URL}/${thumbName}`;
+
+        return image.getBufferAsync(file.mimetype).then(buffer =>
+          s3.putObjectAsync({
+            Bucket: 'ig-clone-dev',
+            Key: thumbName,
+            ACL: 'public-read',
+            Body: buffer
+          })
+        );
       }
     })
-    .catch(err => next(err));
+    .then(() => {
+      // next, save the original
+      const fullName = `${id}${ext}`;
 
+      rtnObj.fullUrl = `${BUCKET_URL}/${fullName}`;
+
+      return s3.putObjectAsync({
+        Bucket: 'ig-clone-dev',
+        Key: fullName,
+        ACL: 'public-read',
+        Body: file.buffer
+      });
+    })
+    .then(() => res.json(rtnObj))
+    .catch(err => next(err));
 });
 
 module.exports = router;
