@@ -7,35 +7,12 @@ const Posts = require('../models/post');
 // temp test route
 router.route('/').get((req, res) =>
   Posts
+    .forge()
+    .orderBy('created_at', 'DESC')
     .fetchAll({ withRelated: { user: query => query.select(['id', 'displayname', 'profile_pic_url']) } })
     .then(results => {
       res.json(results);
     })
 );
-
-// router.route('/').post((req, res, next) => {
-//   const { email, password, displayname } = req.body;
-
-//   if (!email || !password || !displayname) {
-//     return next(new createError.BadRequest('Invalid Credentials'));
-//   }
-
-//   const passwordDigest = bcrypt.hashSync(password, 10);
-
-//   return User
-//     .forge({
-//       displayname,
-//       email,
-//       passwordDigest
-//     }, {
-//       hasTimestamps: true
-//     })
-//     .save()
-//     .then(newUser => {
-//       const { passwordDigest: _, ...rest } = newUser.attributes;
-//       res.status(201);
-//       res.json(rest);
-//     }).catch(err => next(new createError.InternalServerError(err)));
-// });
 
 module.exports = router;

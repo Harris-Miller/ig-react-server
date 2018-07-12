@@ -16,7 +16,7 @@ exports.seed = async knex => {
       knex('posts').insert([
         { id: 1, user_id: 1, text: 'This is my first post!', full_url: 'http://blog.sillyme.me/wp-content/uploads/2012/10/first-post.jpg', created_at: '2018-07-10 05:01:23.362-06', updated_at: '2018-07-10 05:01:23.362-06' },
         { id: 2, user_id: 2, text: 'I\'m the king of comedy!', created_at: '2018-07-11T23:59:35.140-6', updated_at: '2018-07-11T23:59:35.140-6' },
-        { id: 3, user_id: 3, text: 'I\'m fucking crazy!!!', full_url: 'https://www.placecage.com/c/500/500', created_at: '2018-07-11T23:59:35.140-6', updated_at: '2018-07-11T23:59:35.140-6' }
+        { id: 3, user_id: 3, text: 'I\'m fucking crazy!!!', full_url: 'https://www.placecage.com/c/500/300', created_at: '2018-07-11T23:59:35.140-6', updated_at: '2018-07-11T23:59:35.140-6' }
       ])
     );
 
