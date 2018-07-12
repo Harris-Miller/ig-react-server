@@ -1,7 +1,10 @@
 const request = require('supertest');
 const createError = require('http-errors');
+const jwt = require('jsonwebtoken');
 const app = require('../../app');
 const authenticate = require('../../middleware/authenticate');
+
+const { JWT_SECRET } = process.env;
 
 describe('middleware/authenticate', () => {
   it('returns Forbidden error via next() if no token is provided', () => {
@@ -55,11 +58,15 @@ describe('middleware/authenticate', () => {
   });
 
   it('sets req.userId on verified token', () => {
+    const token = jwt.sign({
+      id: 1,
+      username: 'John Doe'
+    }, JWT_SECRET);
+
     const req = {
       get(key) {
         if (key === 'authorization') {
-          // this auth key is from testing, and decodes with id === 1
-          return 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJIYXJyaXMgTWlsbGVyIiwiaWF0IjoxNTMwNTY4NjM5fQ.C-puSgL_CSqmIztQ6Yy91v2tfMZ02B3ziS5evmvKdgM';
+          return `Bearer ${token}`;
         }
 
         return null;
@@ -71,7 +78,7 @@ describe('middleware/authenticate', () => {
     authenticate(req, res, next);
 
     expect(req.userId).to.equal(1);
-    expect(next).to.have.been.called();
+    expect(next).to.have.been.calledWith();
   });
 });
 

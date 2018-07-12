@@ -4,6 +4,8 @@
  * Module dependencies.
  */
 
+require('dotenv').config({ path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development' });
+
 var app = require('../app');
 var debug = require('debug')('ig-react-server:server');
 var http = require('http');
