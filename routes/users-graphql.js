@@ -1,5 +1,3 @@
-const express = require('express');
-const bcrypt = require('bcrypt');
 const createError = require('http-errors');
 const User = require('../models/user');
 const { buildSchema } = require('graphql');
@@ -34,7 +32,7 @@ const userSchema = buildSchema(`
 
 function getUser({ id }) {
   return User
-    .query({ where: { id }})
+    .query({ where: { id } })
     .fetch({ withRelated: 'posts' })
     .then(user => {
       if (!user) {
@@ -48,20 +46,18 @@ function getUser({ id }) {
 function getUsers() {
   return User
     .fetchAll({ withRelated: 'posts' })
-    .then(users => {
-      return users.toJSON();
-    });
+    .then(users => users.toJSON());
 }
 
 function updateUser({ id, displayname, email, profilePicUrl }) {
   const saveObj = {};
-  id && (saveObj['id'] = id);
-  displayname && (saveObj['displayname'] = displayname);
-  email && (saveObj['email'] = email);
-  profilePicUrl && (saveObj['profile_pic_url'] = profilePicUrl);
+  id && (saveObj.id = id);
+  displayname && (saveObj.displayname = displayname);
+  email && (saveObj.email = email);
+  profilePicUrl && (saveObj.profile_pic_url = profilePicUrl);
 
   return User
-    .query({ where: { id }})
+    .query({ where: { id } })
     .fetch()
     .then(user => {
       if (!user) {

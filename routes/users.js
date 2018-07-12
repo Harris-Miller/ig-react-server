@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const createError = require('http-errors');
+const latinize = require('latinize');
 const router = new express.Router();
 const User = require('../models/user');
 const Post = require('../models/post');
@@ -9,8 +10,8 @@ const Post = require('../models/post');
 // temp test route
 router.route('/').get((req, res) =>
   User
-    // .fetchAll({ columns: ['id', 'displayname', 'email', 'created_at', 'updated_at'] })
-    .fetchAll()
+    .fetchAll({ columns: ['id', 'displayname', 'email', 'created_at', 'updated_at'] })
+    // .fetchAll()
     .then(results => {
       res.json(results);
     })
@@ -23,21 +24,32 @@ router.route('/').post((req, res, next) => {
     return next(new createError.BadRequest('Invalid Credentials'));
   }
 
+  const searchname = latinize(displayname.toLowerCase());
+  const searchnameReverse = displayname.split(' ').reverse().join(' ');
+
   const passwordDigest = bcrypt.hashSync(password, 10);
 
   return User
     .forge({
       displayname,
       email,
+      searchname,
+      searchnameReverse,
       passwordDigest
     }, {
       hasTimestamps: true
     })
     .save()
+    .then(newUser =>
+      // for some reason we have to re-query, otherwise we get back incorrect column names
+      // (specifically for timestamp columns)
+      User
+        .query({ where: { id: newUser.get('id') } })
+        .fetch({ columns: ['id', 'displayname', 'email', 'profile_pic_url', 'created_at', 'updated_at'] }))
     .then(newUser => {
-      const { passwordDigest: _, ...rest } = newUser.attributes;
+      // const { passwordDigest: _1, searchname: _2, searchnameReverse: _3, ...rest } = newUser.toJSON();
       res.status(201);
-      res.json(rest);
+      res.json(newUser);
     }).catch(err => next(new createError.InternalServerError(err)));
 });
 
@@ -45,15 +57,15 @@ router.route('/:id').get((req, res, next) => {
   const { id } = req.params;
 
   User
-    .query({ where: { id: parseInt(id, 10) }})
-    .fetch({ columns: ['id', 'displayname', 'profile_pic_url']})
+    .query({ where: { id: parseInt(id, 10) } })
+    .fetch({ columns: ['id', 'displayname', 'email', 'profile_pic_url', 'created_at', 'updated_at'] })
     .then(user => {
       if (!user) {
         return next(new createError.NotFound());
       }
 
       return res.json(user);
-    })
+    });
 });
 
 router.route('/:id/posts').get((req, res, next) => {
@@ -64,7 +76,7 @@ router.route('/:id/posts').get((req, res, next) => {
   // Q: why not just do a query on Post?
   // A: because we want to atleast see if the user exists to send back a 404, so we go through the User object
   User
-    .forge({ id: parseInt(id, 10) })
+    .where({ id: parseInt(id, 10) })
     .fetch({ columns: ['id'], withRelated: [{ posts: query => { query.select('id', 'text', 'full_url', 'created_at', 'updated_at', 'user_id'); } }] })
     .then(user => {
       if (!user) {
@@ -73,6 +85,23 @@ router.route('/:id/posts').get((req, res, next) => {
 
       return res.json(user.related('posts'));
     });
+});
+
+router.route('/:id/posts').post((req, res, next) => {
+  const { id } = req.params;
+
+  // TODO, authorization
+
+  const { text, fullUrl = null } = req.body;
+
+  if (!text) {
+    return next(new createError.BadRequest());
+  }
+
+  Post
+    .forge({ userId: parseInt(id, 10), text, fullUrl }, { hasTimestamps: true })
+    .save()
+    .then(newPost => res.json(newPost));
 });
 
 module.exports = router;

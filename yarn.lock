@@ -2111,6 +2111,10 @@ latest-version@^3.0.0:
   dependencies:
     package-json "^4.0.0"
 
+latinize@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/latinize/-/latinize-0.4.0.tgz#27439b21e4eb7506c37717b638f1df2c49075a48"
+
 lazy-cache@^1.0.3:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/lazy-cache/-/lazy-cache-1.0.4.tgz#a1d78fc3a50474cb80845d3b3b6e1da49a446e8e"
