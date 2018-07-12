@@ -1,11 +1,19 @@
+const { promisify } = require('util');
+const fs = require('fs');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const createError = require('http-errors');
 const latinize = require('latinize');
-const router = new express.Router();
+const S3 = require('aws-sdk/clients/s3');
+const multer  = require('multer');
+const Jimp = require("jimp");
 const User = require('../models/user');
 const Post = require('../models/post');
 // const authenticate = require('../middleware/authenticate');
+
+const router = new express.Router();
+const s3 = new S3({apiVersion: '2006-03-01'});
+const upload = multer({ storage: multer.memoryStorage() });
 
 // temp test route
 router.route('/').get((req, res) =>
@@ -102,6 +110,40 @@ router.route('/:id/posts').post((req, res, next) => {
     .forge({ userId: parseInt(id, 10), text, fullUrl }, { hasTimestamps: true })
     .save()
     .then(newPost => res.json(newPost));
+});
+
+router.route('/:id/picture').post(upload.single('image'), (req, res, next) => {
+  const { id } = req.params;
+
+  const originalFile = req.file;
+
+  console.log(originalFile);
+
+  // first we read the image
+  Jimp.read(originalFile.buffer)
+    .then(image => {
+      // lets take a look at the dimentions
+      // if the width is greater then 500
+      // then we scale the image down to a width of 500
+      if (image.bitmap.width > 500) {
+        image.resize(500, Jimp.AUTO);
+        // then save 2 versions
+        fs.writeFileSync(originalFile.originalname, originalFile.buffer);
+        image.getBuffer(originalFile.mimetype, (err, buffer) => {
+          if (err) {
+            return next(err);
+          }
+
+          // fs.writeFileSync(`thumb_${originalFile.originalname}`, buffer);
+          res.json({ foo: 'bar '});
+        });
+      } else {
+        // fs.writeFileSync(originalFile.originalname, originalFile.buffer);
+        res.json({ foo: 'bar '});
+      }
+    })
+    .catch(err => next(err));
+
 });
 
 module.exports = router;
