@@ -21,7 +21,8 @@ router.route('/').post((req, res, next) => {
       if (user && bcrypt.compareSync(password, user.get('passwordDigest'))) {
         const token = jwt.sign({
           id: user.get('id'),
-          displayname: user.get('displayname')
+          displayname: user.get('displayname'),
+          profilePicUrl: user.get('profile_pic_url')
         }, JWT_SECRET);
 
         res.json({ token });
