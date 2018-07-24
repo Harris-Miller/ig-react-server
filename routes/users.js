@@ -38,8 +38,6 @@ router.route('/').post((req, res, next) => {
   }
 
   const searchname = latinize(displayname.toLowerCase());
-  const searchnameReverse = displayname.split(' ').reverse().join(' ');
-
   const passwordDigest = bcrypt.hashSync(password, 10);
 
   return User
@@ -47,7 +45,6 @@ router.route('/').post((req, res, next) => {
       displayname,
       email,
       searchname,
-      searchnameReverse,
       passwordDigest
     }, {
       hasTimestamps: true
