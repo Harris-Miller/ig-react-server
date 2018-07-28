@@ -30,16 +30,6 @@ router.route('/').get((req, res) =>
     })
 );
 
-router.route('/:id').get((req, res) => {
-  const { id } = req.params;
-  User
-    .query({ where: { id } })
-    .fetch({ columns: ['id', 'displayname', 'email', 'profile_pic_url', 'created_at', 'updated_at'] })
-    .then(result => {
-      res.json(result);
-    });
-});
-
 router.route('/').post((req, res, next) => {
   const { email, password, displayname } = req.body;
 
@@ -85,7 +75,8 @@ router.route('/:id').get((req, res, next) => {
       }
 
       return res.json(user);
-    });
+    })
+    .catch(err => next(new createError.InternalServerError(err)));
 });
 
 router.route('/:id/posts').get((req, res, next) => {
