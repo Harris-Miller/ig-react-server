@@ -80,22 +80,34 @@ router.route('/:id').get((req, res, next) => {
 });
 
 router.route('/:id/posts').get((req, res, next) => {
-  const { id } = req.params;
+  const id = parseInt(req.params.id, 10);
+  let page = parseInt(req.query.page, 10);
 
-  // only fetch the column id for the user, because we're only returning the related data anyways
-  // (eg. get min ammount of data needed)
-  // Q: why not just do a query on Post?
-  // A: because we want to atleast see if the user exists to send back a 404, so we go through the User object
+  if (isNaN(page)) {
+    page = 1;
+  }
+
   User
-    .where({ id: parseInt(id, 10) })
-    .fetch({ columns: ['id'], withRelated: [{ posts: query => { query.select('id', 'text', 'full_url', 'created_at', 'updated_at', 'user_id'); } }] })
+    .where({ id })
+    .fetch({ columns: ['id'] })
     .then(user => {
       if (!user) {
         return next(new createError.NotFound());
       }
-
-      return res.json(user.related('posts'));
-    });
+    })
+    .then(() =>
+      Post
+        .where({ user_id: id })
+        .orderBy('-created_at')
+        .fetchPage({
+          pageSize: 15,
+          page
+        })
+    )
+    .then(posts => {
+      res.json(posts);
+    })
+    .catch(err => next(new createError.InternalServerError(err)));
 });
 
 router.route('/:id/posts').post((req, res, next) => {
